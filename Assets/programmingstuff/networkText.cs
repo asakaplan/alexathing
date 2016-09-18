@@ -20,6 +20,9 @@ public class networkText : MonoBehaviour {
 	//static int bufferSize = 512;
 	byte[] data = new byte[1024];
 	string receiveMsg = "";
+	bool destroyedZombs = false;
+	bool hasDestroyedZombs = false;
+	bool nextToZombie = false;
 
 	bool ipconfiged = false;
 	bool conReady = false;
@@ -32,12 +35,12 @@ public class networkText : MonoBehaviour {
 	}
 	void SendCallback(IAsyncResult ar) {
 
-		changeText ("fucksit4");
 		receiveData ();
 	}
 
 	void Start ()
 	{
+		GameObject.Find ("z@walk (7)").SetActive (false);
 		readTCPInfo(); 
 		theStream.ReadTimeout = 1238989712;
 		theStream.BeginRead(data, 0, data.Length, new AsyncCallback(HasRead), tcpClient);
@@ -47,7 +50,16 @@ public class networkText : MonoBehaviour {
 		// Read data from the remote device.
 		int bytesRead = tcpClient.Client.EndReceive(ar);
 		receiveMsg = System.Text.Encoding.ASCII.GetString(data, 0, bytesRead);
-		thePolice = receiveMsg;
+		if (receiveMsg.StartsWith ("text:")) {
+			thePolice = receiveMsg.Substring (5);
+		} else if (receiveMsg.StartsWith ("panic")) {
+			thePolice = "asdfasdf";
+			destroyedZombs = true;
+			//Remove zombies
+		} else if (receiveMsg.StartsWith ("hate")) {
+			//Put a zombie
+			nextToZombie = true;
+		}
 
 		theStream.BeginRead(data, 0, data.Length, new AsyncCallback(HasRead), tcpClient);
 		//receiveMsg;
@@ -61,6 +73,19 @@ public class networkText : MonoBehaviour {
 		if (thePolice != "") {
 			changeText (thePolice);
 		}
+		if (!hasDestroyedZombs && destroyedZombs) {
+
+			Destroy (GameObject.Find ("z@walk (3)"));
+			Destroy (GameObject.Find ("z@walk (4)"));
+			Destroy (GameObject.Find ("z@walk (5)"));
+			Destroy (GameObject.Find ("z@walk (6)"));
+			hasDestroyedZombs = true;
+			
+		}
+		if (nextToZombie) {
+			GameObject.Find ("z@walk (7)").SetActive (true);
+		}
+
 	}
 	void readTCPInfo()
 	{
